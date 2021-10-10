@@ -1,0 +1,28 @@
+{
+  "name": "spider-assistant",
+  "description": "Spider assistant plugin for Crawlab",
+  "proto": "http",
+  "cmd": "go run main.go",
+  "endpoint": "localhost:9997",
+  "event_key": {
+    "include": "^model:",
+    "exclude": "artifact"
+  },
+  "install_url": "https://github.com/crawlab-team/plugin-spider-assistant",
+  "deploy_mode": "master",
+  "auto_start": false,
+  "ui_components": [
+    {
+      "name": "assistant",
+      "title": "Assistant",
+      "src": "ui/src/AssistantDetail.vue",
+      "type": "tab",
+      "path": "assistant",
+      "parent_paths": [
+        "/spiders/:id"
+      ]
+    }
+  ],
+  "ui_sidebar_navs": [],
+  "ui_assets": []
+}

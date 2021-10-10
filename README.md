@@ -1,2 +1,2 @@
-# plugin-scrapy
-Scrapy plugin for Crawlab
+# plugin-spider-assistant
+Spider assistant plugin for Crawlab
