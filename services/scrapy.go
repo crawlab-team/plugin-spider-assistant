@@ -1,22 +1,15 @@
 package services
 
 import (
-	"errors"
+	"encoding/json"
 	"github.com/crawlab-team/crawlab-core/controllers"
-	"github.com/crawlab-team/crawlab-core/interfaces"
 	"github.com/crawlab-team/crawlab-core/spider/fs"
-	"github.com/crawlab-team/crawlab-core/utils"
 	"github.com/crawlab-team/go-trace"
-	"github.com/crawlab-team/plugin-scrapy/constants"
-	"github.com/crawlab-team/plugin-scrapy/entity"
 	"github.com/gin-gonic/gin"
-	"github.com/go-python/gpython/compile"
-	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"io/ioutil"
-	"os"
+	"os/exec"
 	"path"
-	"strings"
 )
 
 type ScrapyService struct {
@@ -56,65 +49,46 @@ func (svc *ScrapyService) get(c *gin.Context) {
 		return
 	}
 
-	// scrapy.cfg
-	//cfg, err := svc._getScrapyCfg(fsSvc)
-	//if err != nil {
-	//	controllers.HandleErrorInternalServerError(c, err)
-	//	return
-	//}
-	//controllers.HandleSuccessWithData(c, cfg)
+	// workspace path
+	workspacePath := fsSvc.GetWorkspacePath()
 
-	//filepath := path.Join(fsSvc.GetWorkspacePath(), "scrapy_baidu", "settings.py")
-	//filepath := path.Join(fsSvc.GetWorkspacePath(), "scrapy_baidu", "spiders", "baidu.py")
-	filepath := path.Join(fsSvc.GetWorkspacePath(), "scrapy_baidu", "items.py")
-	py, err := svc._parsePy(filepath)
+	// results
+	res, err := svc._getResults(workspacePath)
 	if err != nil {
 		controllers.HandleErrorInternalServerError(c, err)
 		return
 	}
-	controllers.HandleSuccessWithData(c, py)
+
+	controllers.HandleSuccessWithData(c, res)
 }
 
-func (svc *ScrapyService) _getScrapyCfg(fsSvc interfaces.SpiderFsService) (cfg *entity.ScrapyCfg, err error) {
-	// cfg path
-	cfgPath := path.Join(fsSvc.GetWorkspacePath(), constants.ScrapyCfgFileName)
-	if !utils.Exists(cfgPath) {
-		return nil, errors.New("not exists")
-	}
+func (svc *ScrapyService) _getResults(workspacePath string) (res bson.M, err error) {
+	// arguments
+	var args []string
 
-	// read cfg into viper config
-	f, err := os.Open(cfgPath)
+	// script path
+	scriptPath := path.Join("scripts", "scrapy.py")
+	args = append(args, scriptPath)
+
+	// directory path
+	args = append(args, "-d")
+	args = append(args, workspacePath)
+
+	// command
+	cmd := exec.Command("python", args...)
+
+	// output
+	data, err := cmd.Output()
 	if err != nil {
 		return nil, trace.TraceError(err)
 	}
-	vp := viper.New()
-	vp.SetConfigType("ini")
-	if err := vp.ReadConfig(f); err != nil {
+
+	// deserialize
+	if err := json.Unmarshal(data, &res); err != nil {
 		return nil, trace.TraceError(err)
 	}
 
-	// cfg
-	cfg = entity.NewScrapyCfg()
-
-	// iterate viper keys
-	for _, k := range vp.AllKeys() {
-		v := vp.GetString(k)
-		if strings.HasPrefix(k, "settings") {
-			cfg.Settings[k] = v
-		} else if strings.HasPrefix(k, "deploy") {
-			cfg.Deploy[k] = v
-		}
-	}
-
-	return cfg, nil
-}
-
-func (svc *ScrapyService) _parsePy(filepath string) (res interface{}, err error) {
-	src, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	return compile.Compile(string(src), filepath, "exec", 0, false)
+	return res, nil
 }
 
 func NewScrapyService(parent *Service) (svc *ScrapyService) {

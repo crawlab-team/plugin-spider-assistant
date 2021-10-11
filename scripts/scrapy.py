@@ -1,13 +1,67 @@
 import ast
 import argparse
+import json
+import os
+import configparser
 
 parser = argparse.ArgumentParser()
-parser.add_argument('action')
+parser.add_argument('-a', dest='action', default='all')
+parser.add_argument('-d', '--dir', dest='directory', default='.')
 parser.add_argument('-f', '--file', dest='filepath')
 args = parser.parse_args()
 
 
-def parse_items(filepath: str) -> list:
+def parse_ast(filepath: str) -> ast.Module:
+    # ast object
+    ast_obj = _parse_ast(filepath)
+    print(ast.dump(ast_obj, indent=4))
+    return ast_obj
+
+
+def parse_all() -> dict:
+    result = {}
+
+    # settings
+    res_settings = parse_settings()
+    if res_settings is not None:
+        result['settings'] = res_settings
+
+    # items
+    res_items = parse_items()
+    if res_items is not None:
+        result['items'] = res_items
+
+    # spiders
+    res_spiders = parse_spiders()
+    if res_spiders is not None:
+        result['spiders'] = res_spiders
+
+    # scrapy.cfg
+    res_cfg = parse_scrapy_cfg()
+    if res_cfg is not None:
+        result['cfg'] = res_cfg
+
+    return result
+
+
+def parse_scrapy_cfg() -> [dict, None]:
+    cfg = _get_scrapy_cfg()
+    if cfg is None:
+        return
+    res = {}
+    for section in cfg.values():
+        res[section.name] = {}
+        for option_name, option in section.items():
+            res[section.name][option_name] = option
+    return res
+
+
+def parse_items(filepath: str = None) -> list:
+    # default file path if empty
+    if filepath is None:
+        module_name = _get_default_module()
+        filepath = os.path.join(args.directory, module_name, 'items.py')
+
     # ast object
     ast_obj = _parse_ast(filepath)
 
@@ -33,7 +87,12 @@ def parse_items(filepath: str) -> list:
     return results
 
 
-def parse_settings(filepath: str) -> list:
+def parse_settings(filepath: str = None) -> list:
+    # default file path if empty
+    if filepath is None:
+        module_name = _get_default_module()
+        filepath = os.path.join(args.directory, module_name, 'settings.py')
+
     # ast object
     ast_obj = _parse_ast(filepath)
 
@@ -59,6 +118,33 @@ def parse_settings(filepath: str) -> list:
     return results
 
 
+def parse_spiders(dirpath: str = None) -> list:
+    # default directory path if empty
+    if dirpath is None:
+        module_name = _get_default_module()
+        dirpath = os.path.join(args.directory, module_name, 'spiders')
+
+    # results
+    results = []
+
+    for filename in os.listdir(dirpath):
+        # skip if not .py
+        if not filename.endswith('.py'):
+            continue
+
+        # file path
+        filepath = os.path.join(dirpath, filename)
+
+        # parsed result
+        _results = _parse_spider_file(filepath)
+
+        # add to results
+        for res in _results:
+            results.append(res)
+
+    return results
+
+
 def _parse_items_element(el) -> [dict, None]:
     # result
     res = {}
@@ -71,7 +157,7 @@ def _parse_items_element(el) -> [dict, None]:
     b = el.bases[0]
 
     # skip if base is not valid
-    if not _is_type(el, 'scrapy', 'Item'):
+    if not _is_type(b, 'scrapy', 'Item'):
         return
 
     # item name
@@ -170,6 +256,49 @@ def _parse_settings_element(el) -> [dict, None]:
     return res
 
 
+def _parse_spider_file(filepath: str) -> list:
+    # ast object
+    ast_obj = _parse_ast(filepath)
+
+    # results
+    results = []
+
+    # iterate body elements
+    for el in ast_obj.body:
+        # skip if type is not ast.ClassDef
+        if type(el) != ast.ClassDef:
+            continue
+
+        # parsed result
+        res = _parse_spider(el)
+
+        # skip if result is empty
+        if res is None:
+            continue
+
+        # add to results
+        results.append(res)
+
+    return results
+
+
+def _parse_spider(el: ast.ClassDef) -> [dict, None]:
+    # class name
+    class_name = _get_class_name(el)
+
+    # skip if class name not ends with 'Spider'
+    if not class_name.endswith('Spider'):
+        return
+
+    # result
+    res = {
+        'name': el.name,
+        'type': class_name,
+    }
+
+    return res
+
+
 def _get_constant_result(el: ast.Constant) -> dict:
     return {
         'type': type(el.value).__name__,
@@ -182,7 +311,6 @@ def _parse_ast(filepath: str) -> ast.Module:
         src = f.read()
 
     res = ast.parse(src)
-    print(ast.dump(res, indent=4))
 
     return res
 
@@ -196,13 +324,57 @@ def _is_type(el, m: str, t: str) -> bool:
             return False
         if el.attr != t:
             return False
+    else:
+        return False
     return True
+
+
+def _get_class_name(el: ast.ClassDef) -> [str, None]:
+    if len(el.bases) == 0:
+        return
+
+    b = el.bases[0]
+
+    if type(b) == ast.Name:
+        return b.id
+    elif type(b) == ast.Attribute:
+        if type(b.value) != ast.Name:
+            return
+        return b.attr
+    else:
+        return
+
+
+def _get_scrapy_cfg() -> [configparser.ConfigParser, None]:
+    cfg_path = os.path.join(args.directory, 'scrapy.cfg')
+    if not os.path.exists(cfg_path):
+        return
+    config = configparser.ConfigParser()
+    config.read(cfg_path)
+    return config
+
+
+def _get_default_module() -> [str, None]:
+    config = _get_scrapy_cfg()
+    if config is None:
+        return
+    try:
+        settings = config.get('settings', 'default')
+        arr = settings.split('.')
+        if len(arr) == 0:
+            return None
+        return arr[0]
+    except configparser.NoSectionError:
+        return
+    except configparser.NoOptionError:
+        return
 
 
 def main():
     results = None
     if args.action == 'ast':
-        results = _parse_ast(args.filepath)
+        parse_ast(args.filepath)
+        return
 
     if args.action == 'items':
         results = parse_items(args.filepath)
@@ -210,7 +382,14 @@ def main():
     if args.action == 'settings':
         results = parse_settings(args.filepath)
 
-    print(results)
+    if args.action == 'spiders':
+        results = parse_spiders()
+
+    if args.action == 'all':
+        results = parse_all()
+
+    # output
+    print(json.dumps(results))
 
 
 if __name__ == '__main__':
