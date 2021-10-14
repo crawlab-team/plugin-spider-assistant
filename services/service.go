@@ -11,10 +11,12 @@ import (
 type Service struct {
 	*plugin.Internal
 
+	spiderSvc *SpiderService
 	scrapySvc *ScrapyService
 }
 
 func (svc *Service) Init() (err error) {
+	svc.spiderSvc.Init()
 	svc.scrapySvc.Init()
 	return nil
 }
@@ -47,6 +49,7 @@ func NewService() *Service {
 		Internal: plugin.NewInternal(),
 	}
 
+	svc.spiderSvc = NewSpiderService(svc)
 	svc.scrapySvc = NewScrapyService(svc)
 
 	if err := svc.Init(); err != nil {

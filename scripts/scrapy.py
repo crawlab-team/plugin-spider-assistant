@@ -10,6 +10,15 @@ parser.add_argument('-d', '--dir', dest='directory', default='.')
 parser.add_argument('-f', '--file', dest='filepath')
 args = parser.parse_args()
 
+_middleware_methods = [
+    'from_crawler',
+    'process_spider_input',
+    'process_spider_output',
+    'process_spider_exception',
+    'process_start_requests',
+    'spider_opened',
+]
+
 
 def parse_ast(filepath: str) -> ast.Module:
     # ast object
@@ -35,6 +44,11 @@ def parse_all() -> dict:
     res_spiders = parse_spiders()
     if res_spiders is not None:
         result['spiders'] = res_spiders
+
+    # middlewares
+    res_middlewares = parse_middlewares()
+    if res_middlewares is not None:
+        result['middlewares'] = res_middlewares
 
     # scrapy.cfg
     res_cfg = parse_scrapy_cfg()
@@ -145,6 +159,37 @@ def parse_spiders(dirpath: str = None) -> list:
     return results
 
 
+def parse_middlewares(filepath: str = None) -> list:
+    # default file path if empty
+    if filepath is None:
+        module_name = _get_default_module()
+        filepath = os.path.join(args.directory, module_name, 'middlewares.py')
+
+    # ast object
+    ast_obj = _parse_ast(filepath)
+
+    # results
+    results = []
+
+    # iterate body elements
+    for el in ast_obj.body:
+        # skip if type is not ast.ClassDef
+        if type(el) != ast.ClassDef:
+            continue
+
+        # parsed results
+        res = _parse_middlewares_elements(el)
+
+        # skip if result is empty
+        if res is None:
+            continue
+
+        # add to results
+        results.append(res)
+
+    return results
+
+
 def _parse_items_element(el) -> [dict, None]:
     # result
     res = {}
@@ -188,7 +233,27 @@ def _parse_items_element(el) -> [dict, None]:
             continue
 
         # field name
-        field = tgt.id
+        field_name = tgt.id
+
+        # field type
+        field_type = ''
+        if len(stmt.value.keywords) > 0:
+            for k in stmt.value.keywords:
+                if type(k) != ast.keyword:
+                    continue
+                if k.arg != 'serializer':
+                    continue
+                if type(k.value) != ast.Name:
+                    continue
+                # field type
+                field_type = k.value.id
+                break
+
+        # field
+        field = {
+            'name': field_name,
+            'type': field_type,
+        }
 
         # add to fields
         res['fields'].append(field)
@@ -272,6 +337,9 @@ def _parse_spider_file(filepath: str) -> list:
         # parsed result
         res = _parse_spider(el)
 
+        # file path
+        res['filepath'] = filepath.replace(args.directory, '.')
+
         # skip if result is empty
         if res is None:
             continue
@@ -297,6 +365,36 @@ def _parse_spider(el: ast.ClassDef) -> [dict, None]:
     }
 
     return res
+
+
+def _parse_middlewares_elements(el: ast.ClassDef) -> [dict, None]:
+    # middleware
+    middleware = {
+        'name': el.name,
+    }
+
+    # methods
+    methods = []
+
+    for sub_el in el.body:
+        # skip if type is not ast.FunctionDef
+        if type(sub_el) is not ast.FunctionDef:
+            continue
+
+        # method name
+        method_name = sub_el.name
+
+        # add to methods if in standard method list
+        if method_name in _middleware_methods:
+            methods.append(method_name)
+
+    # return None if not match
+    if len(methods) == 0:
+        return
+
+    middleware['methods'] = methods
+
+    return middleware
 
 
 def _get_constant_result(el: ast.Constant) -> dict:
@@ -376,14 +474,17 @@ def main():
         parse_ast(args.filepath)
         return
 
+    if args.action == 'spiders':
+        results = parse_spiders()
+
     if args.action == 'items':
         results = parse_items(args.filepath)
 
     if args.action == 'settings':
         results = parse_settings(args.filepath)
 
-    if args.action == 'spiders':
-        results = parse_spiders()
+    if args.action == 'middlewares':
+        results = parse_middlewares(args.filepath)
 
     if args.action == 'all':
         results = parse_all()
