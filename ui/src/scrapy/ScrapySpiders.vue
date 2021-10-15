@@ -10,6 +10,8 @@
 <script lang="ts">
 import {computed, defineComponent, h} from 'vue';
 import {ClNavLink} from 'crawlab-ui';
+import {useRoute, useRouter} from 'vue-router';
+import {useStore} from 'vuex';
 
 export default defineComponent({
   name: 'ScrapySpiders',
@@ -22,6 +24,21 @@ export default defineComponent({
     },
   },
   setup(props, {emit}) {
+    const router = useRouter();
+
+    const route = useRoute();
+
+    const id = computed(() => route.params.id);
+
+    const store = useStore();
+
+    const gotoFile = (filepath) => {
+      store.commit(`spider/setDefaultFilePaths`, [filepath]);
+      router.push({
+        path: `/spiders/${id.value}/files`,
+      });
+    };
+
     const tableData = computed(() => {
       const {spiders} = props.form;
       return spiders || [];
@@ -49,7 +66,7 @@ export default defineComponent({
           value: (row) => h(ClNavLink, {
             label: row.filepath,
             onClick: () => {
-              console.debug(row.filepath)
+              gotoFile(row.filepath);
             }
           })
         },
@@ -65,7 +82,8 @@ export default defineComponent({
               size: 'mini',
               icon: ['fa', 'search'],
               tooltip: 'View',
-              onClick: (row) => {
+              onClick: () => {
+                gotoFile(row.filepath);
               }
             },
           ],

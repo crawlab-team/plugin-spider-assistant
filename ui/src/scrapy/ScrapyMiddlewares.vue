@@ -10,6 +10,8 @@
 <script lang="ts">
 import {computed, defineComponent, h} from 'vue';
 import {ClTag} from 'crawlab-ui';
+import {useRoute, useRouter} from 'vue-router';
+import {useStore} from 'vuex';
 
 export default defineComponent({
   name: 'ScrapyMiddlewares',
@@ -19,6 +21,21 @@ export default defineComponent({
     }
   },
   setup(props, {emit}) {
+    const router = useRouter();
+
+    const route = useRoute();
+
+    const id = computed(() => route.params.id);
+
+    const store = useStore();
+
+    const gotoFile = (filepath) => {
+      store.commit(`spider/setDefaultFilePaths`, [filepath]);
+      router.push({
+        path: `/spiders/${id.value}/files`,
+      });
+    };
+
     const tableData = computed(() => {
       const {middlewares} = props.form;
       return middlewares || [];
@@ -55,7 +72,8 @@ export default defineComponent({
               size: 'mini',
               icon: ['fa', 'search'],
               tooltip: 'View',
-              onClick: (row) => {
+              onClick: () => {
+                gotoFile(row.filepath);
               }
             },
           ],

@@ -9,14 +9,14 @@
     <cl-form-item :span="2" label="Spiders">
       <cl-tag :label="getCount('spiders')" clickable @click="onGoto('spiders')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Items" clickable @click="onGoto('items')">
-      <cl-tag :label="getCount('items')"/>
+    <cl-form-item :span="2" label="Items">
+      <cl-tag :label="getCount('items')" clickable @click="onGoto('items')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Middlewares" clickable @click="onGoto('middlewares')">
-      <cl-tag :label="getCount('middlewares')"/>
+    <cl-form-item :span="2" label="Middlewares">
+      <cl-tag :label="getCount('middlewares')" clickable @click="onGoto('middlewares')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Settings" clickable @click="onGoto('settings')">
-      <cl-tag :label="getCount('settings')"/>
+    <cl-form-item :span="2" label="Settings">
+      <cl-tag :label="getCount('settings')" clickable @click="onGoto('settings')"/>
     </cl-form-item>
   </cl-form>
 </template>
