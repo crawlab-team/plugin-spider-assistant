@@ -91,6 +91,9 @@ def parse_items(filepath: str = None) -> list:
         # parsed results
         res = _parse_items_element(el)
 
+        # file path
+        res['filepath'] = filepath.replace(args.directory, '')
+
         # skip if result is empty
         if res is None:
             continue
@@ -121,6 +124,9 @@ def parse_settings(filepath: str = None) -> list:
 
         # parsed result
         res = _parse_settings_element(el)
+
+        # file path
+        res['filepath'] = filepath.replace(args.directory, '')
 
         # skip if result is empty
         if res is None:
@@ -179,6 +185,9 @@ def parse_middlewares(filepath: str = None) -> list:
 
         # parsed results
         res = _parse_middlewares_elements(el)
+
+        # file path
+        res['filepath'] = filepath.replace(args.directory, '')
 
         # skip if result is empty
         if res is None:
@@ -338,7 +347,7 @@ def _parse_spider_file(filepath: str) -> list:
         res = _parse_spider(el)
 
         # file path
-        res['filepath'] = filepath.replace(args.directory, '.')
+        res['filepath'] = filepath.replace(args.directory, '')
 
         # skip if result is empty
         if res is None:
@@ -392,6 +401,7 @@ def _parse_middlewares_elements(el: ast.ClassDef) -> [dict, None]:
     if len(methods) == 0:
         return
 
+    # methods
     middleware['methods'] = methods
 
     return middleware
