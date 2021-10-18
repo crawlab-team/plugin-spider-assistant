@@ -5,15 +5,17 @@
           :model="spiderData"
           :grid="3"
       >
-        <cl-form-item :span="1" label="Spider Type">
-          <el-select v-model="spiderData.type" disabled>
-            <el-option v-for="op in typeOptions" :key="op.value" :label="op.label" :value="op.value"/>
-          </el-select>
+        <cl-form-item :span="1" label="Framework">
+          <cl-tag
+              :label="spiderDataFrameworkLabel"
+              :type="spiderDataFrameworkType"
+              size="normal"
+          />
         </cl-form-item>
       </cl-form>
     </div>
     <div class="spider-content">
-      <template v-if="spiderData.type === 'scrapy'">
+      <template v-if="spiderData.framework === 'scrapy'">
         <Scrapy/>
       </template>
     </div>
@@ -21,7 +23,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, ref} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import {useRequest} from 'crawlab-ui';
 import {useRoute} from 'vue-router';
 import Scrapy from './scrapy/Scrapy.vue';
@@ -38,14 +40,11 @@ export default defineComponent({
   setup(props, {emit}) {
     const route = useRoute();
 
-    const spiderData = ref({});
+    const spiderData = ref({
+      framework: '',
+    });
 
-    const typeOptions = ref([
-      {value: '', label: 'General'},
-      {value: 'scrapy', label: 'Scrapy'},
-    ]);
-
-    const getData = async () => {
+    const getSpiderData = async () => {
       const id = route.params.id;
       if (!id) return;
       const res = await get(`${endpoint}/spiders/${id}`);
@@ -53,20 +52,36 @@ export default defineComponent({
       spiderData.value = data;
     };
 
-    onMounted(getData);
+    onMounted(getSpiderData);
+
+    const spiderDataFrameworkLabel = computed(() => {
+      switch (spiderData.value.framework) {
+        case 'scrapy':
+          return 'Scrapy';
+        default:
+          return 'No Framework';
+      }
+    });
+
+    const spiderDataFrameworkType = computed(() => {
+      switch (spiderData.value.framework) {
+        case 'scrapy':
+          return 'primary';
+        default:
+          return 'info';
+      }
+    });
 
     return {
       spiderData,
-      typeOptions,
+      spiderDataFrameworkLabel,
+      spiderDataFrameworkType,
     };
   },
 });
 </script>
 
 <style scoped>
-.assistant-detail {
-}
-
 .assistant-detail .top-bar {
   padding: 10px 0;
   border-bottom: 1px solid #e6e6e6;

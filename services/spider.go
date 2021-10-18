@@ -46,12 +46,12 @@ func (svc *SpiderService) get(c *gin.Context) {
 
 	// spider info
 	info := entity.SpiderInfo{}
-	info.Type = svc._getType(workspacePath)
+	info.Framework = svc._getFramework(workspacePath)
 
 	controllers.HandleSuccessWithData(c, info)
 }
 
-func (svc *SpiderService) _getType(workspacePath string) (t string) {
+func (svc *SpiderService) _getFramework(workspacePath string) (t string) {
 	if utils.Exists(path.Join(workspacePath, constants.ScrapyCfgFileName)) {
 		return constants.SpiderTypeScrapy
 	}
