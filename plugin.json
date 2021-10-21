@@ -10,7 +10,7 @@
   },
   "install_url": "https://github.com/crawlab-team/plugin-spider-assistant",
   "deploy_mode": "master",
-  "auto_start": false,
+  "auto_start": true,
   "ui_components": [
     {
       "name": "assistant",
