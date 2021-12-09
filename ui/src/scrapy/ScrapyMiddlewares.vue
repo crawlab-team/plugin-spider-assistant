@@ -13,6 +13,10 @@ import {ClTag} from 'crawlab-ui';
 import {useRoute, useRouter} from 'vue-router';
 import {useStore} from 'vuex';
 
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
+const _t = window['_t'];
+
 export default defineComponent({
   name: 'ScrapyMiddlewares',
   props: {
@@ -45,12 +49,12 @@ export default defineComponent({
       return [
         {
           key: 'name',
-          label: 'Name',
+          label: t('scrapy.middlewares.table.columns.name'),
           width: '240',
         },
         {
           key: 'methods',
-          label: 'Methods',
+          label: t('scrapy.middlewares.table.columns.methods'),
           width: '800',
           value: (row) => {
             if (!row.methods) return [];
@@ -62,7 +66,7 @@ export default defineComponent({
         },
         {
           key: 'actions',
-          label: 'Actions',
+          label: _t('components.table.columns.actions'),
           icon: ['fa', 'tools'],
           width: '180',
           fixed: 'right',
@@ -71,7 +75,7 @@ export default defineComponent({
               type: 'primary',
               size: 'mini',
               icon: ['fa', 'search'],
-              tooltip: 'View',
+              tooltip: _t('common.actions.view'),
               onClick: () => {
                 gotoFile(row.filepath);
               }

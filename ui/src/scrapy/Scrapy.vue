@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, onMounted, ref} from 'vue';
+import {computed, defineComponent, onMounted, ref} from 'vue';
 import ScrapyOverview from './ScrapyOverview.vue';
 import ScrapySpiders from './ScrapySpiders.vue';
 import ScrapyItems from './ScrapyItems.vue';
@@ -32,6 +32,9 @@ import ScrapySettings from './ScrapySettings.vue';
 import ScrapyMiddlewares from './ScrapyMiddlewares.vue';
 import {useRoute} from 'vue-router';
 import {useRequest} from 'crawlab-ui';
+
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
 
 const {
   get
@@ -50,13 +53,13 @@ export default defineComponent({
 
     const activeKey = ref('overview');
 
-    const navItems = [
-      {id: 'overview', title: 'Overview'},
-      {id: 'spiders', title: 'Spiders'},
-      {id: 'items', title: 'Items'},
-      {id: 'middlewares', title: 'Middlewares'},
-      {id: 'settings', title: 'Settings'},
-    ];
+    const navItems = computed(() => [
+      {id: 'overview', title: t('scrapy.navItems.overview')},
+      {id: 'spiders', title: t('scrapy.navItems.spiders')},
+      {id: 'items', title: t('scrapy.navItems.items')},
+      {id: 'middlewares', title: t('scrapy.navItems.middlewares')},
+      {id: 'settings', title: t('scrapy.navItems.settings')},
+    ]);
 
     const getForm = async () => {
       const id = route.params.id;

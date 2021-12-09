@@ -13,6 +13,10 @@ import {ClTag} from 'crawlab-ui';
 import {useRoute, useRouter} from 'vue-router';
 import {useStore} from 'vuex';
 
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
+const _t = window['_t'];
+
 export default defineComponent({
   name: 'ScrapyItems',
   props: {
@@ -63,12 +67,12 @@ export default defineComponent({
       return [
         {
           key: 'name',
-          label: 'Name',
+          label: t('scrapy.items.table.columns.name'),
           width: '200',
         },
         {
           key: 'fields',
-          label: 'Fields',
+          label: t('scrapy.items.table.columns.fields'),
           width: '800',
           value: (row) => {
             if (!row.fields) return [];
@@ -76,13 +80,13 @@ export default defineComponent({
               label: f.name,
               clickable: true,
               type: getType(f),
-              tooltip: f.type ? `Field Type: ${f.type}` : '',
+              tooltip: f.type ? `${t('scrapy.items.fieldType')}: ${f.type}` : '',
             }));
           },
         },
         {
           key: 'actions',
-          label: 'Actions',
+          label: _t('components.table.columns.actions'),
           icon: ['fa', 'tools'],
           width: '180',
           fixed: 'right',
@@ -91,7 +95,7 @@ export default defineComponent({
               type: 'primary',
               size: 'mini',
               icon: ['fa', 'search'],
-              tooltip: 'View',
+              tooltip: _t('common.actions.view'),
               onClick: () => {
                 gotoFile(row.filepath);
               }

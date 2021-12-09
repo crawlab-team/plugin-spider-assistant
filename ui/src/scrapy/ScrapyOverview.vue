@@ -1,21 +1,21 @@
 <template>
   <cl-form class="scrapy-overview">
-    <cl-form-item :span="2" label="Settings">
+    <cl-form-item :span="2" :label="t('scrapy.navItems.settings')">
       <cl-tag v-for="(d, $index) in settings" :key="$index" :label="d"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Deploy">
+    <cl-form-item :span="2" :label="t('scrapy.overview.deploy')">
       <cl-tag v-for="(d, $index) in deploy" :key="$index" :label="d"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Spiders">
+    <cl-form-item :span="2" :label="t('scrapy.navItems.spiders')">
       <cl-tag :label="getCount('spiders')" clickable @click="onGoto('spiders')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Items">
+    <cl-form-item :span="2" :label="t('scrapy.navItems.items')">
       <cl-tag :label="getCount('items')" clickable @click="onGoto('items')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Middlewares">
+    <cl-form-item :span="2" :label="t('scrapy.navItems.middlewares')">
       <cl-tag :label="getCount('middlewares')" clickable @click="onGoto('middlewares')"/>
     </cl-form-item>
-    <cl-form-item :span="2" label="Settings">
+    <cl-form-item :span="2" :label="t('scrapy.navItems.settings')">
       <cl-tag :label="getCount('settings')" clickable @click="onGoto('settings')"/>
     </cl-form-item>
   </cl-form>
@@ -23,6 +23,9 @@
 
 <script lang="ts">
 import {computed, defineComponent} from 'vue';
+
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
 
 export default defineComponent({
   name: 'ScrapyOverview',
@@ -79,6 +82,7 @@ export default defineComponent({
       deploy,
       getCount,
       onGoto,
+      t,
     };
   },
 });

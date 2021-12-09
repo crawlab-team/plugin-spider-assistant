@@ -13,6 +13,10 @@ import {ClNavLink} from 'crawlab-ui';
 import {useRoute, useRouter} from 'vue-router';
 import {useStore} from 'vuex';
 
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
+const _t = window['_t'];
+
 export default defineComponent({
   name: 'ScrapySpiders',
   props: {
@@ -48,19 +52,19 @@ export default defineComponent({
       return [
         {
           key: 'name',
-          label: 'Name',
+          label: t('scrapy.spiders.table.columns.name'),
           icon: ['fa', 'font'],
           width: '160',
         },
         {
           key: 'type',
-          label: 'Type',
+          label: t('scrapy.spiders.table.columns.type'),
           icon: ['fa', 'spider'],
           width: '160',
         },
         {
           key: 'filepath',
-          label: 'File Path',
+          label: t('scrapy.spiders.table.columns.filePath'),
           icon: ['fa', 'file'],
           width: '600',
           value: (row) => h(ClNavLink, {
@@ -72,7 +76,7 @@ export default defineComponent({
         },
         {
           key: 'actions',
-          label: 'Actions',
+          label: _t('components.table.columns.actions'),
           icon: ['fa', 'tools'],
           width: '180',
           fixed: 'right',
@@ -81,7 +85,7 @@ export default defineComponent({
               type: 'primary',
               size: 'mini',
               icon: ['fa', 'search'],
-              tooltip: 'View',
+              tooltip: _t('common.actions.view'),
               onClick: () => {
                 gotoFile(row.filepath);
               }
@@ -94,6 +98,7 @@ export default defineComponent({
     return {
       tableData,
       tableColumns,
+      t,
     };
   },
 });

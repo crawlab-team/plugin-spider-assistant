@@ -11,10 +11,11 @@
   "install_url": "https://github.com/crawlab-team/plugin-spider-assistant",
   "deploy_mode": "master",
   "auto_start": true,
+  "lang_url": "ui/lang",
   "ui_components": [
     {
       "name": "assistant",
-      "title": "Assistant",
+      "title": "assistant.detail.tabs.title",
       "src": "ui/src/AssistantDetail.vue",
       "type": "tab",
       "path": "assistant",

@@ -5,7 +5,7 @@
           :model="spiderData"
           :grid="3"
       >
-        <cl-form-item :span="1" label="Framework">
+        <cl-form-item :span="1" :label="t('assistant.detail.framework')">
           <cl-tag
               :label="spiderDataFrameworkLabel"
               :type="spiderDataFrameworkType"
@@ -34,6 +34,9 @@ const {
 
 const endpoint = '/plugin-proxy/spider-assistant';
 
+const pluginName = 'spider-assistant';
+const t = (path) => window['_tp'](pluginName, path);
+
 export default defineComponent({
   name: 'AssistantDetail',
   components: {Scrapy},
@@ -57,9 +60,9 @@ export default defineComponent({
     const spiderDataFrameworkLabel = computed(() => {
       switch (spiderData.value.framework) {
         case 'scrapy':
-          return 'Scrapy';
+          return t('assistant.detail.scrapy');
         default:
-          return 'No Framework';
+          return t('assistant.detail.noFramework');
       }
     });
 
@@ -76,6 +79,7 @@ export default defineComponent({
       spiderData,
       spiderDataFrameworkLabel,
       spiderDataFrameworkType,
+      t,
     };
   },
 });
