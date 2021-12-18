@@ -1,5 +1,6 @@
 {
   "name": "spider-assistant",
+  "full_name": "crawlab-team/plugin-spider-assistant",
   "description": "Spider assistant plugin for Crawlab",
   "proto": "http",
   "cmd": "go run main.go",
